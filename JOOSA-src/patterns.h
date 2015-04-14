@@ -543,9 +543,6 @@ int simplify_doubleif_icmplt(CODE **c) {
   }
   return 0;
 }
-<<<<<<< HEAD
-#define OPTS 24
-=======
 
 /*
 if_icmplt label1
