@@ -498,7 +498,7 @@ int simplify_doubleif_icmplt(CODE **c) {
   }
   return 0;
 }
-#define OPTS 23
+#define OPTS 24
 OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_multiplication_left,
                            simplify_astore,
