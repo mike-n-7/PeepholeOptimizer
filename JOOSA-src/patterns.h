@@ -34,11 +34,13 @@ int simplify_multiplication_right(CODE **c)
   return 0;
 }
 
-/* dup
- * astore x
- * pop
+/* dup        [ x * ] -> [ x x ]
+ * astore x   [ x x ] -> [ x * ]
+ * pop        [ x * ] -> [ * * ]
  * -------->
- * astore x
+ * astore x   [ x * ] -> [ * * ]
+ * 
+ * Sound because we duplicate a value that we would have gotten rid of anyways.
  */
 int simplify_astore(CODE **c)
 { int x;
@@ -55,6 +57,8 @@ int simplify_astore(CODE **c)
  * pop
  * -------->
  * istore x
+ *
+ * Sound because we duplicate a value that we would have gotten rid of anyways. Same as previous rule.
  */
 int simplify_istore(CODE **c)
 { int x;
@@ -120,6 +124,8 @@ goto label2:
 ...
 label1:
 label2:
+
+Sound because no code is executed between label1 and label2 so we can jump directly to label2.
 */
 int goto_double_label(CODE **c) {
   int l1, l2;
@@ -131,7 +137,9 @@ int goto_double_label(CODE **c) {
   return 0;
 }
 
-extern LABEL* currentlabels;
+/*
+Sound because if nothing is referencing a label, we might as well remove it.
+*/
 int remove_dead_label(CODE **c) {
   int l1;
   if (is_label(*c, &l1) && deadlabel(l1)) {
@@ -146,6 +154,10 @@ int remove_dead_label(CODE **c) {
    ---->
    ifnonnull label2
    label1:
+
+   Sound because no code is in the else part of the conditional. Therefore we can negate it and
+   go directly to the if part. We keep the label because it may be referenced somewhere else and
+   don't want to remove it in this case.
 */
 int simplify_ifnull(CODE **c) {
   int x, y, z;
@@ -164,6 +176,8 @@ int simplify_ifnull(CODE **c) {
    label1:
    ---->
    ifnull label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_ifnonnull(CODE **c) {
   int x, y, z;
@@ -187,6 +201,8 @@ int simplify_ifnonnull(CODE **c) {
    label1:
    ...
    label2:
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_ifeq(CODE **c) {
   int x, y, z;
@@ -205,6 +221,8 @@ int simplify_ifeq(CODE **c) {
    label1:
    ---->
    ifeq label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_ifne(CODE **c) {
   int x, y, z;
@@ -223,6 +241,8 @@ int simplify_ifne(CODE **c) {
    label1:
    ---->
    if_acmpne label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_acmpeq(CODE **c) {
   int x, y, z;
@@ -241,6 +261,8 @@ int simplify_if_acmpeq(CODE **c) {
    label1:
    ---->
    if_acmpeq label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_acmpne(CODE **c) {
   int x, y, z;
@@ -259,6 +281,8 @@ int simplify_if_acmpne(CODE **c) {
    label1:
    ---->
    if_icmpne label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmpeq(CODE **c) {
   int x, y, z;
@@ -277,6 +301,8 @@ int simplify_if_icmpeq(CODE **c) {
    label1:
    ---->
    if_icmpeq label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmpne(CODE **c) {
   int x, y, z;
@@ -295,6 +321,8 @@ int simplify_if_icmpne(CODE **c) {
    label1:
    ---->
    if_icmple label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmpgt(CODE **c) {
   int x, y, z;
@@ -313,6 +341,8 @@ int simplify_if_icmpgt(CODE **c) {
    label1:
    ---->
    if_icmpgt label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmple(CODE **c) {
   int x, y, z;
@@ -331,6 +361,8 @@ int simplify_if_icmple(CODE **c) {
    label1:
    ---->
    if_icmpge label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmplt(CODE **c) {
   int x, y, z;
@@ -349,6 +381,8 @@ int simplify_if_icmplt(CODE **c) {
    label1:
    ---->
    if_icmplt label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmpge(CODE **c) {
   int x, y, z;
@@ -374,6 +408,10 @@ ifeq label3
 label1:
 label2:
 if_icmplt label3
+
+Sound because the inner code is only used to make a conditional based on the result of the first conditional.
+We need to make sure label1 and label2 are unique so we can't get inside this code section from elsewhere
+in the bytecode.
 */
 int simplify_doubleif_icmpge(CODE **c) {
   int x1, c1, x2, l1, c2, l2, x3;
@@ -402,6 +440,8 @@ ifeq label3
 label1:
 label2:
 if_icmple label3
+
+Sound for same reason as simplify_doubleif_icmpge.
 */
 int simplify_doubleif_icmpgt(CODE **c) {
   int x1, c1, x2, l1, c2, l2, x3;
@@ -430,6 +470,8 @@ ifeq label3
 label1:
 label2:
 if_icmpgt label3
+
+Sound for same reason as simplify_doubleif_icmpge.
 */
 int simplify_doubleif_icmple(CODE **c) {
   int x1, c1, x2, l1, c2, l2, x3;
@@ -458,6 +500,8 @@ ifeq label3
 label1:
 label2:
 if_icmpge label3
+
+Sound for same reason as simplify_doubleif_icmpge.
 */
 int simplify_doubleif_icmplt(CODE **c) {
   int x1, c1, x2, l1, c2, l2, x3;
