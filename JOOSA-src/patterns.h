@@ -543,9 +543,6 @@ int simplify_doubleif_icmplt(CODE **c) {
   }
   return 0;
 }
-<<<<<<< HEAD
-#define OPTS 24
-=======
 
 /*
 if_icmplt label1
@@ -670,7 +667,157 @@ int simplify_doubleif_icmple_ne(CODE **c) {
   }
   return 0;
 }
-#define OPTS 28
+
+/*        [...:a]
+ldc 0     [...:a:0]
+iadd      [...:a]
+------>
+
+Sound because the 2 operations don't change the vars in 
+the stack so we can safely remove them.
+*/
+
+int simplify_iadd(CODE **c)
+{
+  int k;
+  if (is_ldc_int(*c,&k) &&
+      is_iadd(next(*c))) {
+    if (k==0) return replace(c,2,NULL);
+    return 0;
+  }
+  return 0;
+}
+
+/*        [...:a]
+ldc 0     [...:a:0]
+iload x   [...:a:0:x]
+iadd      [...:a:x]
+------->
+iload x   [...:a:x]
+
+Soundness: see stack evolution
+*/
+int simplify_iadd_iload(CODE **c)
+{
+  int k,x;
+  if (is_ldc_int(*c,&k) &&
+      is_iload(next(*c), &x) &&
+      is_iadd(next(next(*c)))) {
+    if (k==0) return replace(c,3,makeCODEiload(x,NULL));
+    return 0;
+  }
+  return 0;
+}
+
+/*        [...:a]
+ldc 0     [...:a:0]
+iload x   [...:a:0:x]
+isub      [...:a:-x]
+------->
+iload x   [...:a:x]
+ineg      [...:a:-x]
+*/
+
+int simplify_isub_iload(CODE **c)
+{
+  int k,x;
+  if (is_ldc_int(*c,&k) &&
+      is_iload(next(*c), &x) &&
+      is_isub(next(next(*c)))) {
+    if (k==0) return replace(c,3,makeCODEiload(x,makeCODEineg(NULL)));
+    return 0;
+  }
+  return 0;
+}
+
+
+/*        [...:a]
+ldc 0     [...:a:0]
+isub      [...:a]
+------->
+          [...:a]
+*/
+
+int simplify_isub(CODE **c)
+{
+  int k;
+  if (is_ldc_int(*c,&k) &&
+      is_isub(next(*c))) {
+    if (k==0) return replace(c,2,NULL);
+    return 0;
+  }
+  return 0;
+}
+
+/*
+goto label1
+label1:
+-------->
+label1:  
+
+Sound because there are no instructions between the 
+goto and the label we are going to.   
+*/
+
+int simplify_goto(CODE **c)
+{ int l1;
+  if (is_goto(*c,&l1) && 
+      is_label(next(*c),&l1)) {
+     return replace(c,2,makeCODElabel(l1,NULL));
+  }
+  return 0;
+}
+
+/*        [...:a:b]
+ineg      [...:a:-b]
+iadd      [...:a-b]
+-------->
+isub      [...:a-b]
+*/
+
+int simplify_iadd2(CODE **c)
+{
+  if (is_ineg(*c) &&
+      is_iadd(next(*c))) {
+    return replace(c,2,makeCODEisub(NULL));
+  }
+  return 0;
+}
+
+/*        [...:a:b]
+ineg      [...:a:-b]
+isub      [...:a+b]
+--------->
+iadd      [...:a+b]
+*/
+
+int simplify_isub2(CODE **c)
+{
+  if (is_ineg(*c) &&
+      is_isub(next(*c))) {
+    return replace(c,2,makeCODEiadd(NULL));
+  }
+  return 0;
+}
+
+/*         [...:a]
+ldc 1      [...:a:1]
+idiv       [...:a/1] = [...:a]
+-------->
+           [...:a]
+*/
+int simplify_idiv(CODE **c)
+{
+  int k;
+  if (is_ldc_int(*c,&k) &&
+      is_idiv(next(*c))) {
+    if (k==1) return replace(c,2,NULL);
+    return 0;
+  }
+  return 0;
+}
+
+#define OPTS 36
 
 OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_multiplication_left,
@@ -699,5 +846,13 @@ OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_doubleif_icmple_ne,
                            simplify_doubleif_icmplt_ne,
                            simplify_doubleif_icmpge_ne,
-                           simplify_doubleif_icmpgt_ne
+                           simplify_doubleif_icmpgt_ne,
+                           simplify_iadd,
+                           simplify_iadd_iload,
+                           simplify_isub,
+                           simplify_isub_iload,
+                           simplify_goto,
+                           simplify_iadd2,
+                           simplify_isub2,
+                           simplify_idiv
                           };
