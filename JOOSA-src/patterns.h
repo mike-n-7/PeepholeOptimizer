@@ -518,7 +518,131 @@ int simplify_doubleif_icmplt(CODE **c) {
   }
   return 0;
 }
-#define OPTS 23
+
+/*
+if_icmplt label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifne label3
+------->
+label1:
+label2:
+if_icmplt label3
+
+Sound for same reason as simplify_doubleif_icmpge.
+*/
+int simplify_doubleif_icmplt_ne(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmplt(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifne(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmplt(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+
+/*
+if_icmpge label1 
+iconst_0
+goto label2 
+label1:
+iconst_1
+label2:
+ifne label3 
+------->
+label1:
+label2:
+if_icmpne label3
+
+Sound because the inner code is only used to make a conditional based on the result of the first conditional.
+We need to make sure label1 and label2 are unique so we can't get inside this code section from elsewhere
+in the bytecode.
+*/
+int simplify_doubleif_icmpge_ne(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmpge(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifne(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmpge(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+/*
+if_icmpgt label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifne label3
+------->
+label1:
+label2:
+if_icmpgt label3
+
+Sound for same reason as simplify_doubleif_icmpge.
+*/
+int simplify_doubleif_icmpgt_ne(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmpgt(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifne(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmpgt(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+/*
+if_icmple label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifne label3
+------->
+label1:
+label2:
+if_icmple label3
+
+Sound for same reason as simplify_doubleif_icmpge.
+*/
+int simplify_doubleif_icmple_ne(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmple(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifne(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmple(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+#define OPTS 27
 OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_astore,
                            positive_increment,
@@ -541,5 +665,9 @@ OPTI optimization[OPTS] = {simplify_multiplication_right,
                            remove_dead_label,
                            simplify_doubleif_icmple,
                            simplify_doubleif_icmpgt,
-                           simplify_doubleif_icmplt
+                           simplify_doubleif_icmplt,
+                           simplify_doubleif_icmple_ne,
+                           simplify_doubleif_icmplt_ne,
+                           simplify_doubleif_icmpge_ne,
+                           simplify_doubleif_icmpgt_ne
                           };
