@@ -760,10 +760,11 @@ goto and the label we are going to.
 */
 
 int simplify_goto(CODE **c)
-{ int l1;
+{ int l1,l2;
   if (is_goto(*c,&l1) && 
-      is_label(next(*c),&l1)) {
-     return replace(c,2,makeCODElabel(l1,NULL));
+      is_label(next(*c),&l2)) {
+    if(l1 == l2) return replace(c,2,makeCODElabel(l1,NULL));
+    return 0;
   }
   return 0;
 }
