@@ -817,7 +817,35 @@ int simplify_idiv(CODE **c)
   return 0;
 }
 
-#define OPTS 36
+/*
+aload_0
+   aload_0
+   getfield test/k I
+   aload_0
+   getfield test/k I
+   invokevirtual test/f(II)V
+------------------>
+
+aload_0
+   aload_0
+   getfield test/k I
+   dup
+   invokevirtual test/f(II)V
+*/
+
+int simplify_dupInstanceVar(CODE **c)
+{
+	int j,k;
+	int *x, *y;
+	if(is_aload(*c, &k) && is_getfield(next(*c),&x)
+		&& is_aload(next(next(*c)), &y) && is_getfield(next(next(next(*c))),&y) && j==k && x==y)
+	{
+		replace(next(next(*c)),2, makeCodedup(NULL));
+	}
+	return 0;
+}
+
+#define OPTS 37
 
 OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_multiplication_left,
@@ -855,4 +883,5 @@ OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_iadd2,
                            simplify_isub2,
                            simplify_idiv
+						   simplify_dupInstanceVar
                           };
