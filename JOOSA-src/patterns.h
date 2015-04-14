@@ -34,6 +34,30 @@ int simplify_multiplication_right(CODE **c)
   return 0;
 }
 
+/* ldc 0          ldc 1          ldc 2
+ * iload x        iload x        iload x
+ * imul           imul           imul
+ * ------>        ------>        ------>
+ * ldc 0          iload x        iload x
+ *                               dup
+ *                               iadd
+ */
+
+int simplify_multiplication_left(CODE **c)
+{ int x,k;
+  if (is_ldc_int(*c,&x) && 
+      is_iload(next(*c),&k) && 
+      is_imul(next(next(*c)))) {
+     if (k==0) return replace(c,3,makeCODEldc_int(0,NULL));
+     else if (k==1) return replace(c,3,makeCODEiload(x,NULL));
+     else if (k==2) return replace(c,3,makeCODEiload(x,
+                                       makeCODEdup(
+                                       makeCODEiadd(NULL))));
+     return 0;
+  }
+  return 0;
+}
+
 /* dup
  * astore x
  * pop
@@ -476,6 +500,7 @@ int simplify_doubleif_icmplt(CODE **c) {
 }
 #define OPTS 23
 OPTI optimization[OPTS] = {simplify_multiplication_right,
+                           simplify_multiplication_left,
                            simplify_astore,
                            positive_increment,
                            simplify_goto_goto,
