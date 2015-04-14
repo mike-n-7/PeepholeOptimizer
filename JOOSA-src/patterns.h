@@ -840,7 +840,7 @@ int simplify_dupInstanceVar(CODE **c)
 	if(is_aload(*c, &k) && is_getfield(next(*c),&x)
 		&& is_aload(next(next(*c)), &y) && is_getfield(next(next(next(*c))),&y) && j==k && x==y)
 	{
-		replace(next(next(*c)),2, makeCodedup(NULL));
+		replace(next(next(*c)),2, makeCODEdup(NULL));
 	}
 	return 0;
 }
@@ -882,6 +882,6 @@ OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_goto,
                            simplify_iadd2,
                            simplify_isub2,
-                           simplify_idiv
+                           simplify_idiv,
 						   simplify_dupInstanceVar
                           };
