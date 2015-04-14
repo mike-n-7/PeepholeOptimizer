@@ -58,11 +58,14 @@ int simplify_multiplication_left(CODE **c)
   return 0;
 }
 
-/* dup
- * astore x
- * pop
+
+/* dup        [ x * ] -> [ x x ]
+ * astore x   [ x x ] -> [ x * ]
+ * pop        [ x * ] -> [ * * ]
  * -------->
- * astore x
+ * astore x   [ x * ] -> [ * * ]
+ * 
+ * Sound because we duplicate a value that we would have gotten rid of anyways.
  */
 int simplify_astore(CODE **c)
 { int x;
@@ -79,6 +82,8 @@ int simplify_astore(CODE **c)
  * pop
  * -------->
  * istore x
+ *
+ * Sound because we duplicate a value that we would have gotten rid of anyways. Same as previous rule.
  */
 int simplify_istore(CODE **c)
 { int x;
@@ -144,6 +149,8 @@ goto label2:
 ...
 label1:
 label2:
+
+Sound because no code is executed between label1 and label2 so we can jump directly to label2.
 */
 int goto_double_label(CODE **c) {
   int l1, l2;
@@ -155,7 +162,9 @@ int goto_double_label(CODE **c) {
   return 0;
 }
 
-extern LABEL* currentlabels;
+/*
+Sound because if nothing is referencing a label, we might as well remove it.
+*/
 int remove_dead_label(CODE **c) {
   int l1;
   if (is_label(*c, &l1) && deadlabel(l1)) {
@@ -170,6 +179,10 @@ int remove_dead_label(CODE **c) {
    ---->
    ifnonnull label2
    label1:
+
+   Sound because no code is in the else part of the conditional. Therefore we can negate it and
+   go directly to the if part. We keep the label because it may be referenced somewhere else and
+   don't want to remove it in this case.
 */
 int simplify_ifnull(CODE **c) {
   int x, y, z;
@@ -188,6 +201,8 @@ int simplify_ifnull(CODE **c) {
    label1:
    ---->
    ifnull label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_ifnonnull(CODE **c) {
   int x, y, z;
@@ -211,6 +226,8 @@ int simplify_ifnonnull(CODE **c) {
    label1:
    ...
    label2:
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_ifeq(CODE **c) {
   int x, y, z;
@@ -229,6 +246,8 @@ int simplify_ifeq(CODE **c) {
    label1:
    ---->
    ifeq label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_ifne(CODE **c) {
   int x, y, z;
@@ -247,6 +266,8 @@ int simplify_ifne(CODE **c) {
    label1:
    ---->
    if_acmpne label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_acmpeq(CODE **c) {
   int x, y, z;
@@ -265,6 +286,8 @@ int simplify_if_acmpeq(CODE **c) {
    label1:
    ---->
    if_acmpeq label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_acmpne(CODE **c) {
   int x, y, z;
@@ -283,6 +306,8 @@ int simplify_if_acmpne(CODE **c) {
    label1:
    ---->
    if_icmpne label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmpeq(CODE **c) {
   int x, y, z;
@@ -301,6 +326,8 @@ int simplify_if_icmpeq(CODE **c) {
    label1:
    ---->
    if_icmpeq label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmpne(CODE **c) {
   int x, y, z;
@@ -319,6 +346,8 @@ int simplify_if_icmpne(CODE **c) {
    label1:
    ---->
    if_icmple label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmpgt(CODE **c) {
   int x, y, z;
@@ -337,6 +366,8 @@ int simplify_if_icmpgt(CODE **c) {
    label1:
    ---->
    if_icmpgt label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmple(CODE **c) {
   int x, y, z;
@@ -355,6 +386,8 @@ int simplify_if_icmple(CODE **c) {
    label1:
    ---->
    if_icmpge label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmplt(CODE **c) {
   int x, y, z;
@@ -373,6 +406,8 @@ int simplify_if_icmplt(CODE **c) {
    label1:
    ---->
    if_icmplt label2
+
+   Sound for the same reason as simplify_ifnull.
 */
 int simplify_if_icmpge(CODE **c) {
   int x, y, z;
@@ -398,6 +433,10 @@ ifeq label3
 label1:
 label2:
 if_icmplt label3
+
+Sound because the inner code is only used to make a conditional based on the result of the first conditional.
+We need to make sure label1 and label2 are unique so we can't get inside this code section from elsewhere
+in the bytecode.
 */
 int simplify_doubleif_icmpge(CODE **c) {
   int x1, c1, x2, l1, c2, l2, x3;
@@ -426,6 +465,8 @@ ifeq label3
 label1:
 label2:
 if_icmple label3
+
+Sound for same reason as simplify_doubleif_icmpge.
 */
 int simplify_doubleif_icmpgt(CODE **c) {
   int x1, c1, x2, l1, c2, l2, x3;
@@ -454,6 +495,8 @@ ifeq label3
 label1:
 label2:
 if_icmpgt label3
+
+Sound for same reason as simplify_doubleif_icmpge.
 */
 int simplify_doubleif_icmple(CODE **c) {
   int x1, c1, x2, l1, c2, l2, x3;
@@ -482,6 +525,8 @@ ifeq label3
 label1:
 label2:
 if_icmpge label3
+
+Sound for same reason as simplify_doubleif_icmpge.
 */
 int simplify_doubleif_icmplt(CODE **c) {
   int x1, c1, x2, l1, c2, l2, x3;
@@ -498,7 +543,135 @@ int simplify_doubleif_icmplt(CODE **c) {
   }
   return 0;
 }
+<<<<<<< HEAD
 #define OPTS 24
+=======
+
+/*
+if_icmplt label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifne label3
+------->
+label1:
+label2:
+if_icmplt label3
+
+Sound for same reason as simplify_doubleif_icmpge.
+*/
+int simplify_doubleif_icmplt_ne(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmplt(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifne(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmplt(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+
+/*
+if_icmpge label1 
+iconst_0
+goto label2 
+label1:
+iconst_1
+label2:
+ifne label3 
+------->
+label1:
+label2:
+if_icmpne label3
+
+Sound because the inner code is only used to make a conditional based on the result of the first conditional.
+We need to make sure label1 and label2 are unique so we can't get inside this code section from elsewhere
+in the bytecode.
+*/
+int simplify_doubleif_icmpge_ne(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmpge(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifne(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmpge(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+/*
+if_icmpgt label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifne label3
+------->
+label1:
+label2:
+if_icmpgt label3
+
+Sound for same reason as simplify_doubleif_icmpge.
+*/
+int simplify_doubleif_icmpgt_ne(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmpgt(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifne(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmpgt(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+/*
+if_icmple label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifne label3
+------->
+label1:
+label2:
+if_icmple label3
+
+Sound for same reason as simplify_doubleif_icmpge.
+*/
+int simplify_doubleif_icmple_ne(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmple(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifne(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmple(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+#define OPTS 28
+
 OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_multiplication_left,
                            simplify_astore,
@@ -522,5 +695,9 @@ OPTI optimization[OPTS] = {simplify_multiplication_right,
                            remove_dead_label,
                            simplify_doubleif_icmple,
                            simplify_doubleif_icmpgt,
-                           simplify_doubleif_icmplt
+                           simplify_doubleif_icmplt,
+                           simplify_doubleif_icmple_ne,
+                           simplify_doubleif_icmplt_ne,
+                           simplify_doubleif_icmpge_ne,
+                           simplify_doubleif_icmpgt_ne
                           };
