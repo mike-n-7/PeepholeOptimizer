@@ -118,6 +118,8 @@
   iload_1
   invokevirtual java/util/Vector/elementAt(I)Ljava/lang/Object;
   checkcast java/util/Vector
+  astore_3
+  aload_3
   iload_2
   invokevirtual java/util/Vector/elementAt(I)Ljava/lang/Object;
   checkcast java/lang/Character
@@ -200,9 +202,10 @@
   getfield Board/width I
   if_icmplt true_5
   iconst_0
-  goto false_2
+  goto stop_6
   true_5:
   iconst_1
+  stop_6:
   false_2:
   dup
   ifeq false_1
@@ -211,9 +214,10 @@
   iload_2
   if_icmple true_7
   iconst_0
-  goto false_1
+  goto stop_8
   true_7:
   iconst_1
+  stop_8:
   false_1:
   dup
   ifeq false_0
@@ -223,9 +227,10 @@
   getfield Board/height I
   if_icmplt true_9
   iconst_0
-  goto false_0
+  goto stop_10
   true_9:
   iconst_1
+  stop_10:
   false_0:
   ireturn
   nop
@@ -350,9 +355,10 @@
   getfield Board/SPACE Ljava/lang/Character;
   if_acmpne true_16
   iconst_0
-  goto false_13
+  goto stop_17
   true_16:
   iconst_1
+  stop_17:
   false_13:
   ifeq stop_12
   aload_0
@@ -405,9 +411,10 @@
   getfield Board/width I
   if_icmplt true_6
   iconst_0
-  goto false_3
+  goto stop_7
   true_6:
   iconst_1
+  stop_7:
   false_3:
   ifeq true_1
   iconst_0
@@ -428,13 +435,9 @@
   start_8:
   iload_2
   iconst_0
-  if_icmpge true_10
-  iconst_0
-  goto stop_11
   true_10:
-  iconst_1
   stop_11:
-  ifeq stop_9
+  if_icmplt stop_9
   aload_0
   iload_1
   iload_2
@@ -483,9 +486,10 @@
   getfield Board/width I
   if_icmplt true_4
   iconst_0
-  goto false_1
+  goto stop_5
   true_4:
   iconst_1
+  stop_5:
   false_1:
   dup
   ifeq false_0
@@ -497,9 +501,10 @@
   getfield Board/height I
   if_icmpne true_6
   iconst_0
-  goto false_0
+  goto stop_7
   true_6:
   iconst_1
+  stop_7:
   false_0:
   ireturn
   nop
@@ -542,13 +547,9 @@
   start_4:
   iload_2
   iconst_0
-  if_icmpge true_6
-  iconst_0
-  goto stop_7
   true_6:
-  iconst_1
   stop_7:
-  ifeq stop_5
+  if_icmplt stop_5
   iconst_0
   istore_3
   start_8:
@@ -702,9 +703,10 @@
   getfield Board/SPACE Ljava/lang/Character;
   if_acmpne true_19
   iconst_0
-  goto false_16
+  goto stop_20
   true_19:
   iconst_1
+  stop_20:
   false_16:
   ifeq stop_15
   aload_0
@@ -806,9 +808,10 @@
   getfield Board/SPACE Ljava/lang/Character;
   if_acmpne true_40
   iconst_0
-  goto false_37
+  goto stop_41
   true_40:
   iconst_1
+  stop_41:
   false_37:
   ifeq stop_36
   aload_0
@@ -910,9 +913,10 @@
   getfield Board/SPACE Ljava/lang/Character;
   if_acmpne true_61
   iconst_0
-  goto false_58
+  goto stop_62
   true_61:
   iconst_1
+  stop_62:
   false_58:
   ifeq stop_57
   aload_0
@@ -935,13 +939,9 @@
   start_63:
   iload_1
   iconst_3
-  if_icmpge true_65
-  iconst_0
-  goto stop_66
   true_65:
-  iconst_1
   stop_66:
-  ifeq stop_64
+  if_icmplt stop_64
   iconst_0
   istore_2
   start_67:
@@ -1014,9 +1014,10 @@
   getfield Board/SPACE Ljava/lang/Character;
   if_acmpne true_82
   iconst_0
-  goto false_79
+  goto stop_83
   true_82:
   iconst_1
+  stop_83:
   false_79:
   ifeq stop_78
   aload_0
@@ -1051,6 +1052,8 @@
   ldc 7
   ldc 7
   invokenonvirtual Board/<init>(II)V
+  astore_1
+  aload_1
   invokevirtual Board/print()V
   aload_1
   ldc 6

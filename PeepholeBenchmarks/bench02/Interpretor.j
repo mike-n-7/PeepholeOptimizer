@@ -142,7 +142,7 @@
   aload_0
   aload_1
   invokevirtual Interpretor/visible(Ljava/lang/String;)V
-  goto stop_1
+  goto stop_3
   else_2:
   aload_1
   ldc "KTHXBYE"
@@ -150,7 +150,7 @@
   ifeq else_4
   aload_0
   invokevirtual Interpretor/exit()V
-  goto stop_1
+  goto stop_5
   else_4:
   aload_0
   ldc "'"
@@ -179,6 +179,8 @@
   stop_13:
   invokevirtual java/lang/String/concat(Ljava/lang/String;)Ljava/lang/String;
   invokevirtual Interpretor/crashed(Ljava/lang/String;)V
+  stop_5:
+  stop_3:
   stop_1:
   return
 .end method

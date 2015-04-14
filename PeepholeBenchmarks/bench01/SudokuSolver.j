@@ -59,6 +59,8 @@
   getfield SudokuSolver/grid Ljava/util/Vector;
   iload_2
   invokevirtual java/util/Vector/elementAt(I)Ljava/lang/Object;
+  astore 4
+  aload 4
   checkcast java/util/Vector
   astore 5
   aload_1
@@ -130,9 +132,10 @@
   iconst_4
   if_icmpeq true_14
   iconst_0
-  goto true_11
+  goto stop_15
   true_14:
   iconst_1
+  stop_15:
   true_11:
   dup
   ifne true_10
@@ -141,9 +144,10 @@
   ldc 8
   if_icmpeq true_16
   iconst_0
-  goto true_10
+  goto stop_17
   true_16:
   iconst_1
+  stop_17:
   true_10:
   ifeq else_8
   aload_1
@@ -166,9 +170,10 @@
   iconst_4
   if_icmpeq true_25
   iconst_0
-  goto true_22
+  goto stop_26
   true_25:
   iconst_1
+  stop_26:
   true_22:
   dup
   ifne true_21
@@ -177,9 +182,10 @@
   ldc 8
   if_icmpeq true_27
   iconst_0
-  goto true_21
+  goto stop_28
   true_27:
   iconst_1
+  stop_28:
   true_21:
   dup
   ifne true_20
@@ -188,21 +194,26 @@
   ldc 12
   if_icmpeq true_29
   iconst_0
-  goto true_20
+  goto stop_30
   true_29:
   iconst_1
+  stop_30:
   true_20:
   ifeq else_18
   aload_1
   ldc "|"
   invokevirtual joos/lib/JoosIO/print(Ljava/lang/String;)V
-  goto stop_9
+  goto stop_19
   else_18:
   aload_0
   getfield SudokuSolver/grid Ljava/util/Vector;
   iload 4
   invokevirtual java/util/Vector/elementAt(I)Ljava/lang/Object;
+  astore 10
+  aload 10
   checkcast java/util/Vector
+  astore 11
+  aload 11
   iload 5
   invokevirtual java/util/Vector/elementAt(I)Ljava/lang/Object;
   astore 6
@@ -214,6 +225,8 @@
   astore 8
   aload 6
   checkcast java/lang/Integer
+  astore 7
+  aload 7
   aload 8
   if_acmpne true_33
   iconst_0
@@ -228,11 +241,13 @@
   aload_1
   aload 9
   invokevirtual joos/lib/JoosIO/print(Ljava/lang/String;)V
-  goto stop_9
+  goto stop_32
   else_31:
   aload_1
   ldc " "
   invokevirtual joos/lib/JoosIO/print(Ljava/lang/String;)V
+  stop_32:
+  stop_19:
   stop_9:
   iinc 3 1
   goto start_4
@@ -252,9 +267,10 @@
   iconst_4
   if_icmpne true_40
   iconst_0
-  goto false_37
+  goto stop_41
   true_40:
   iconst_1
+  stop_41:
   false_37:
   dup
   ifeq false_36
@@ -263,9 +279,10 @@
   ldc 8
   if_icmpne true_42
   iconst_0
-  goto false_36
+  goto stop_43
   true_42:
   iconst_1
+  stop_43:
   false_36:
   ifeq stop_35
   iinc 4 1

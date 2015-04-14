@@ -118,6 +118,7 @@ label2:
 ---->
 goto label2:
 ...
+label1:
 label2:
 */
 int goto_double_label(CODE **c) {
@@ -130,42 +131,11 @@ int goto_double_label(CODE **c) {
   return 0;
 }
 
+extern LABEL* currentlabels;
 int remove_dead_label(CODE **c) {
   int l1;
   if (is_label(*c, &l1) && deadlabel(l1)) {
     return kill_line(c);
-  }
-  return 0;
-}
-
-/*
- istore 1
- iload 1
- ---->
-
-*/
-int remove_istore_iload(CODE **c) {
-  int x, y;
-  if (is_istore(*c,&x) &&
-      is_iload(next(*c), &y) &&
-      x == y) {
-      return replace(c, 2, NULL);
-  }
-  return 0;
-}
-
-/*
- astore 1
- aload 1
- ---->
-
-*/
-int remove_astore_aload(CODE **c) {
-  int x, y;
-  if (is_astore(*c,&x) &&
-      is_aload(next(*c), &y) &&
-      x == y) {
-      return replace(c, 2, NULL);
   }
   return 0;
 }
@@ -175,6 +145,7 @@ int remove_astore_aload(CODE **c) {
    label1:
    ---->
    ifnonnull label2
+   label1:
 */
 int simplify_ifnull(CODE **c) {
   int x, y, z;
@@ -183,7 +154,7 @@ int simplify_ifnull(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEifnonnull(y, NULL));
+    return replace(c, 2, makeCODEifnonnull(y, NULL));
   }
   return 0;
 }
@@ -201,7 +172,7 @@ int simplify_ifnonnull(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEifnull(y, NULL));
+    return replace(c, 2, makeCODEifnull(y, NULL));
   }
   return 0;
 }
@@ -209,8 +180,13 @@ int simplify_ifnonnull(CODE **c) {
 /* ifeq label1
    goto label2
    label1:
+   ...
+   label2:
    ---->
    ifne label2
+   label1:
+   ...
+   label2:
 */
 int simplify_ifeq(CODE **c) {
   int x, y, z;
@@ -219,7 +195,7 @@ int simplify_ifeq(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEifne(y, NULL));
+    return replace(c, 2, makeCODEifne(y, NULL));
   }
   return 0;
 }
@@ -237,7 +213,7 @@ int simplify_ifne(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEifeq(y, NULL));
+    return replace(c, 2, makeCODEifeq(y, NULL));
   }
   return 0;
 }
@@ -255,7 +231,7 @@ int simplify_if_acmpeq(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEif_acmpne(y, NULL));
+    return replace(c, 2, makeCODEif_acmpne(y, NULL));
   }
   return 0;
 }
@@ -273,7 +249,7 @@ int simplify_if_acmpne(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEif_acmpeq(y, NULL));
+    return replace(c, 2, makeCODEif_acmpeq(y, NULL));
   }
   return 0;
 }
@@ -291,7 +267,7 @@ int simplify_if_icmpeq(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEif_icmpne(y, NULL));
+    return replace(c, 2, makeCODEif_icmpne(y, NULL));
   }
   return 0;
 }
@@ -309,7 +285,7 @@ int simplify_if_icmpne(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEif_icmpeq(y, NULL));
+    return replace(c, 2, makeCODEif_icmpeq(y, NULL));
   }
   return 0;
 }
@@ -327,7 +303,7 @@ int simplify_if_icmpgt(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEif_icmple(y, NULL));
+    return replace(c, 2, makeCODEif_icmple(y, NULL));
   }
   return 0;
 }
@@ -345,7 +321,7 @@ int simplify_if_icmple(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEif_icmpgt(y, NULL));
+    return replace(c, 2, makeCODEif_icmpgt(y, NULL));
   }
   return 0;
 }
@@ -363,7 +339,7 @@ int simplify_if_icmplt(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEif_icmpge(y, NULL));
+    return replace(c, 2, makeCODEif_icmpge(y, NULL));
   }
   return 0;
 }
@@ -381,22 +357,130 @@ int simplify_if_icmpge(CODE **c) {
       is_label(next(next(*c)), &z) &&
       x == z) {
     droplabel(x);
-    return replace(c, 3, makeCODEif_icmplt(y, NULL));
+    return replace(c, 2, makeCODEif_icmplt(y, NULL));
   }
   return 0;
 }
 
-#define OPTS 21
-
+/*
+if_icmpge label1 
+iconst_0
+goto label2 
+label1:
+iconst_1
+label2:
+ifeq label3 
+------->
+label1:
+label2:
+if_icmplt label3
+*/
+int simplify_doubleif_icmpge(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmpge(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifeq(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmplt(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+/*
+if_icmpgt label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifeq label3
+------->
+label1:
+label2:
+if_icmple label3
+*/
+int simplify_doubleif_icmpgt(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmpgt(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifeq(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmple(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+/*
+if_icmple label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifeq label3
+------->
+label1:
+label2:
+if_icmpgt label3
+*/
+int simplify_doubleif_icmple(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmple(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifeq(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmpgt(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+/*
+if_icmplt label1
+iconst_0
+goto label2
+label1:
+iconst_1
+label2:
+ifeq label3
+------->
+label1:
+label2:
+if_icmpge label3
+*/
+int simplify_doubleif_icmplt(CODE **c) {
+  int x1, c1, x2, l1, c2, l2, x3;
+  if (is_if_icmplt(*c, &x1) &&
+      is_ldc_int(next(*c), &c1) && c1 == 0 &&
+      is_goto(next(next(*c)), &x2) &&
+      is_label(next(next(next(*c))), &l1) && l1 == x1 &&
+      is_ldc_int(next(next(next(next(*c)))), &c2) && c2 == 1 &&
+      is_label(next(next(next(next(next(*c))))), &l2) && l2 == x2 &&
+      is_ifeq(next(next(next(next(next(next(*c)))))), &x3) && uniquelabel(l2) && uniquelabel(l1))  {
+    droplabel(l1);
+    droplabel(l2);
+    return replace(c, 7, makeCODEif_icmpge(x3, makeCODElabel(l1, makeCODElabel(l2, NULL))));
+  }
+  return 0;
+}
+#define OPTS 23
 OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_astore,
                            positive_increment,
                            simplify_goto_goto,
                            goto_double_label,
-                           remove_dead_label,
                            simplify_istore,
-                           remove_astore_aload,
-                           remove_istore_iload,
                            simplify_ifnull,
                            simplify_ifnonnull,
                            simplify_ifeq,
@@ -408,5 +492,10 @@ OPTI optimization[OPTS] = {simplify_multiplication_right,
                            simplify_if_icmple,
                            simplify_if_icmpgt,
                            simplify_if_icmpne,
-                           simplify_if_icmpeq
+                           simplify_if_icmpeq,
+                           simplify_doubleif_icmpge,
+                           remove_dead_label,
+                           simplify_doubleif_icmple,
+                           simplify_doubleif_icmpgt,
+                           simplify_doubleif_icmplt
                           };

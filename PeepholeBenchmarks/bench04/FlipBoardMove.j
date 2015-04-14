@@ -44,13 +44,9 @@
   start_4:
   iload 6
   iconst_0
-  if_icmpge true_6
-  iconst_0
-  goto stop_7
   true_6:
-  iconst_1
   stop_7:
-  ifeq stop_5
+  if_icmplt stop_5
   aload_3
   iload 5
   iload 6

@@ -30,13 +30,9 @@
   start_0:
   iload 5
   iconst_0
-  if_icmpge true_2
-  iconst_0
-  goto stop_3
   true_2:
-  iconst_1
   stop_3:
-  ifeq stop_1
+  if_icmplt stop_1
   aload_3
   iload 5
   iload 6
@@ -103,13 +99,9 @@
   start_10:
   iload 5
   iconst_0
-  if_icmpge true_12
-  iconst_0
-  goto stop_13
   true_12:
-  iconst_1
   stop_13:
-  ifeq stop_11
+  if_icmplt stop_11
   aload_3
   iload 5
   iload 6
